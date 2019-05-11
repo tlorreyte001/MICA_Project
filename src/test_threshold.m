@@ -252,5 +252,5 @@ for k=1:length(delta_RR)
     end
     gamma_estim=[gamma_estim (1/(length(delta_RR)-k))*sum(A)];
 end
-gamma_estim
+gamma_estim;
         
