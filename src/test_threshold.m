@@ -225,7 +225,7 @@ delta_barre = mean(delta_RR);
 
 if (1/delta_barre*Fs*60)<60
     result='Bradycardia';
-elseif (delta_barre/Fs*60)>100
+elseif (1/delta_barre*Fs*60)>100
     result='Tachycardia';
 else
     result='Sain';
@@ -236,7 +236,7 @@ result
 ectopic = [];
 for i=1:length(delta_RR)-1
     if delta_RR(i) < delta_barre-2*sqrt(var(delta_RR))
-        ectopic=[ectopic i];
+        ectopic=[ectopic R2(i)];
     end
 end
 ectopic;
