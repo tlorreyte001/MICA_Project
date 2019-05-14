@@ -1,16 +1,5 @@
 function [ data2,R2,Q,S ] = Pan_and_Tompkins( data, Fs )
 %% Apply Pan and Tompkins algorythm on data signal
-
-%% Negative signal
-
-i=1;
-while i<length(data)
-    if data(i)<-0.4
-        data=-data;
-        break
-    end
-    i=i+1;
-end
     
 
 %% High and low filters

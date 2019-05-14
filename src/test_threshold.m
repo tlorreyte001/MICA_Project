@@ -2,7 +2,8 @@
 % This file computes a simple analysis of an ecg signal. You can use it to test the different processing methods. 
 % This first version will plot the temporal signal, compute its cardiac rythma and display the different P, Q, R, S, T points for a specific segment.  
 
-clear; close all; clc;
+clear; 
+%close all; clc;
 addpath(genpath('.'));
 
 %% Load a signal
@@ -18,12 +19,12 @@ time_axis = (1:N)/Fs;
 % i_seg = 10; % Segment number to plot
 % 
 % % Time plot
-figure;
-plot(time_axis, data); grid on;
+% figure;
+% plot(time_axis, data); grid on;
 % hold on; plot(time_axis, th*ones(1,N), 'red');
-xlabel('Time (s)');
-ylabel('Magnitude');
-title('Time evolution of the loaded signal')
+% xlabel('Time (s)');
+% ylabel('Magnitude');
+% title('Time evolution of the loaded signal')
 % 
 % % Print BPM
 % [bpm, R_locs] = bpm_threshold(data, th, Fs);
@@ -48,14 +49,29 @@ title('Time evolution of the loaded signal')
 
 %% Negative signal
 
-i=1;
-while i<length(data)
-    if data(i)<-0.4
-        data=-data;
-        break
-    end
-    i=i+1;
-end
+% i=1;
+% while i<length(data)
+%     if data(i)<-0.4
+%         data=-data;
+%         break
+%     end
+%     i=i+1;
+% end
+
+% data=-data;
+
+% N=350*Fs;
+% time_axis = (1:N)/Fs; 
+% 
+% data=data(100*Fs:450*Fs-1);
+
+% figure;
+% plot(time_axis, data); grid on;
+% % hold on; plot(time_axis, th*ones(1,N), 'red');
+% xlabel('Time (s)');
+% ylabel('Magnitude');
+% title('Time evolution of the loaded signal')
+
     
 
 %% High and low filters
@@ -86,13 +102,13 @@ TF_filtered_signal_high = fftshift(abs(fft(filtered_signal_high)));
 % plot(time_axis, filtered_signal)
 
 nfft = N;
-axe_freq = linspace(-1000,1000, nfft);
-subplot(3,1,1);
-plot(axe_freq, fftshift(abs(fft(data))));
-subplot(3,1,2);
-plot(axe_freq, TF_filtered_signal_low);
-subplot(3,1,3);
-plot(axe_freq, TF_filtered_signal_high);
+% axe_freq = linspace(-1000,1000, nfft);
+% subplot(3,1,1);
+% plot(axe_freq, fftshift(abs(fft(data))));
+% subplot(3,1,2);
+% plot(axe_freq, TF_filtered_signal_low);
+% subplot(3,1,3);
+% plot(axe_freq, TF_filtered_signal_high);
 
 %% Band-pass
 
@@ -101,11 +117,11 @@ filtered_signal_bandpass = filter(num_high, den_high, filtered_signal_low);
 TF_filtered_signal_bandpass = TF_filtered_signal_low .* TF_filtered_signal_high;
 
 % Display
-figure;
-subplot(2,1,1);
-plot(axe_freq, fftshift(abs(fft(data))));
-subplot(2,1,2);
-plot(axe_freq, TF_filtered_signal_bandpass);
+% figure;
+% subplot(2,1,1);
+% plot(axe_freq, fftshift(abs(fft(data))));
+% subplot(2,1,2);
+% plot(axe_freq, TF_filtered_signal_bandpass);
 
 %% Derivative
 
@@ -120,11 +136,11 @@ differentiated_signal = filter(num_deriv, den_deriv, filtered_signal_bandpass);
 TF_differentiated_signal = fftshift(abs(fft(differentiated_signal,nfft)));
 
 % Display
-figure;
-subplot(2,1,1);
-plot(axe_freq, TF_filtered_signal_bandpass);
-subplot(2,1,2);
-plot(axe_freq, TF_differentiated_signal);
+% figure;
+% subplot(2,1,1);
+% plot(axe_freq, TF_filtered_signal_bandpass);
+% subplot(2,1,2);
+% plot(axe_freq, TF_differentiated_signal);
 
 %% Square
 
@@ -141,7 +157,7 @@ SMW = conv(porte,signal_square)/M;
 
 % Display
 figure;
-plot(SMW(23:end)/max(abs(SMW(23:end))),'blue');
+plot(SMW(23:end)/mean(abs(SMW(23:end))),'blue');
 hold on
 plot(data(1:length(SMW(23:end)))/max(abs(data)),'red');
 hold on
@@ -149,13 +165,24 @@ hold on
 
 %% R-Searching 
 
-[blue_peaks_amp, blue_peaks_loc] = findpeaks(SMW(23:end)/max(abs(SMW(23:end))));
+SMW=SMW(23:end);
+
+%Adaptative mean of SMW
+adaptative_mean_SMW = [];
+Nb_periods = 100;
+Nb_points = round(length(SMW)/Nb_periods);
+for i = 1:Nb_points:length(SMW)-Nb_points
+    adaptative_mean_SMW(i:i+Nb_points) = mean(SMW(i:i+Nb_points));
+end
+
+%Searching of rising slopes
+[blue_peaks_amp, blue_peaks_loc] = findpeaks(SMW/mean(abs(SMW)));
 slope1=[];
 slope1_amp=[];
 slope2=[];
 slope2_amp=[];
 for i=1:length(blue_peaks_loc)-1
-    if blue_peaks_amp(i+1)-blue_peaks_amp(i)>0.2
+    if blue_peaks_amp(i+1)-blue_peaks_amp(i)>2 %seuil courbe post filtre
         slope1_amp=[slope1_amp blue_peaks_amp(i)]; 
         slope1=[slope1 blue_peaks_loc(i)];
         slope2=[slope2 blue_peaks_loc(i+1)]; 
@@ -167,15 +194,19 @@ plot(slope1,slope1_amp,'o');
 hold on;
 plot(slope2,slope2_amp,'o');
 
-data2 = data(1:length(SMW(23:end)))/max(abs(data));
+data2 = data(1:length(SMW))/max(abs(data));
 
+%R-peaks
 R2 = [];
 R2_amp=[];
+data_intervalle_slope=[];
 for i=1:length(slope1)
-    [red_peaks_amp, red_peaks_loc] = findpeaks(data2(slope1(i):slope2(i)),'MinPeakHeight',0.15);
+    data_intervalle_slope=[data2(slope1(i):slope2(i))];
+    red_treshold = mean(abs(data_intervalle_slope));
+    [red_peaks_amp, red_peaks_loc] = findpeaks(data2(slope1(i):slope2(i)),'MinPeakHeight',red_treshold);
     if (length(red_peaks_loc)==0)
-        R2_amp = [R2_amp 0];
-        R2 = [R2 slope2(i)-1];
+%         R2_amp = [R2_amp 0];
+%         R2 = [R2 slope2(i)-1];
     else
         R2_amp = [R2_amp red_peaks_amp];
         R2=[R2 red_peaks_loc+slope1(i)-1];
@@ -250,7 +281,9 @@ for k=1:length(delta_RR)
     for n = 1:(length(delta_RR)-k)
         A=[A (delta_RR(n+k)-delta_barre)*(delta_RR(n)-delta_barre)];
     end
-    gamma_estim=[gamma_estim (1/(length(delta_RR)-k))*sum(A)];
+    gamma_estim(k) = (1/(length(delta_RR)-k))*sum(A);
 end
 gamma_estim;
+figure;
+plot(gamma_estim)
         
