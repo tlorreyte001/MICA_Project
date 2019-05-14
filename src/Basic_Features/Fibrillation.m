@@ -1,9 +1,13 @@
-function [ result ] = Fibrilation( delta_RR )
-%FIBRILATION Summary of this function goes here
-%   Detailed explanation goes here
+function [ result ] = Fibrillation( R2 )
+%FIBRILATION
 
-gamma_estim = [];
+delta_RR=[];
+for i=1:length(R2)-1
+    delta_RR = [delta_RR R2(i+1)-R2(i)];
+end
+
 delta_barre = mean(delta_RR);
+gamma_estim = [];
 
 for k=1:length(delta_RR)
     A=[];
@@ -14,9 +18,9 @@ for k=1:length(delta_RR)
 end
 
 if sum(gamma_estim>5000)>=1
-    result = 'Atrial Fibrilations';
+    result = 'Atrial fibrillations';
 else
-    result = 'No fibrilation';
+    result = 'No fibrillation';
 end
 
 end

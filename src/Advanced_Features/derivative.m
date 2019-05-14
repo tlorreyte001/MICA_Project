@@ -1,4 +1,4 @@
-function [ differentiated_signal, TF_differentiated_signal ] = derivative( filtered_signal_bandpass )
+function [ differentiated_signal, TF_differentiated_signal ] = derivative( filtered_signal_bandpass, Fs )
 %% Derivative filter
 
 % Filter
@@ -8,6 +8,6 @@ den_deriv = 8*Ts;
 
 % Signal
 differentiated_signal = filter(num_deriv, den_deriv, filtered_signal_bandpass);
-TF_differentiated_signal = fftshift(abs(fft(differentiated_signal,nfft)));
+TF_differentiated_signal = fftshift(abs(fft(differentiated_signal)));
 end
 
